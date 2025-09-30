@@ -100,7 +100,7 @@ df_demo_moods = (
         .otherwise(7)
         .alias("age_group_order")
     )
-    .group_by(["age_group", "age_group_order"])  # <- Include both here
+    .group_by(["age_group", "age_group_order"])
     .agg([
     pl.len().alias("n"),
     pl.mean("response").alias("avg_mood"),
