@@ -35,12 +35,84 @@ with ZipFile(BytesIO(response.content)) as file_zip:
 
 #==========================================================================#
 #%% Data Wrangling----------------------------------------------------------
-# Players to be included in the visual
+# First, get ages of players
 df_players = (
     dataframes["demographics"]
-    .filter(pl.col("responses").is_not_null())
     .select("pid", "age")
 )
+
+# Then get level progression and reported moods
+df_level_moods = (
+    dataframes["mood_reported"]
+    .select("pid", "LevelProgressionAmount", "response")
+)
+
+# Join the dfs to prep for grouping work
+df_demo_moods_init = (
+    df_level_moods.join(
+    df_players,
+    on = "pid",
+    how = "left")
+)
+
+# Create and order of age groups:
+age_order = {
+    "18-24 Years Old": 1,
+    "25-34 Years Old": 2,
+    "35-44 Years Old": 3,
+    "45-54 Years Old": 4,
+    "55-64 Years Old": 5,
+    "65+ Years Old": 6,
+    "NULL": 7,
+}
+
+# Create the age groups and perform group calculations
+df_demo_moods = (
+    df_demo_moods_init
+    .filter(
+        pl.col("LevelProgressionAmount").is_not_null() & 
+        pl.col("response").is_not_null() &
+        pl.col("age").is_not_null()
+    )
+    .with_columns(
+        pl.when((pl.col("age") >= 18) & (pl.col("age") <= 25))
+        .then(pl.lit("18-24 Years Old"))
+        .when((pl.col("age") >= 25) & (pl.col("age") <= 34))
+        .then(pl.lit("25-34 Years Old"))
+        .when((pl.col("age") >= 35) & (pl.col("age") <= 44))
+        .then(pl.lit("35-44 Years Old"))
+        .when((pl.col("age") >= 45) & (pl.col("age") <= 54))
+        .then(pl.lit("45-54 Years Old"))
+        .when((pl.col("age") >= 55) & (pl.col("age") <= 64))
+        .then(pl.lit("55-64 Years Old"))
+        .when((pl.col("age") >= 65))
+        .then(pl.lit("65+ Years Old"))
+        .otherwise(pl.lit("NULL"))
+        .alias("age_group")
+    )
+    .with_columns(
+        pl.when(pl.col("age_group") == "18-24 Years Old").then(1)
+        .when(pl.col("age_group") == "25-34 Years Old").then(2)
+        .when(pl.col("age_group") == "35-44 Years Old").then(3)
+        .when(pl.col("age_group") == "45-54 Years Old").then(4)
+        .when(pl.col("age_group") == "55-64 Years Old").then(5)
+        .when(pl.col("age_group") == "65+ Years Old").then(6)
+        .otherwise(7)
+        .alias("age_group_order")
+    )
+    .group_by(["age_group", "age_group_order"])  # <- Include both here
+    .agg([
+    pl.len().alias("n"),
+    pl.mean("response").alias("avg_mood"),
+    pl.mean("LevelProgressionAmount").alias("avg_prog")
+    ])
+    .sort("age_group_order")
+)
+
+
+
+
+
 
 
 
