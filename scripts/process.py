@@ -5,16 +5,15 @@
 from zipfile import ZipFile 
 from requests import get
 from io import BytesIO
+import plotnine as pn
 import polars as pl
-
 #==========================================================================#
 #%% Data Fetching----------------------------------------------------------
 url_zip = "https://osf.io/download/j48qf/"
 response = get(url_zip)
 lst_files = (
     "data/demographics.csv",
-    "data/mood_reported.csv",
-    "data/update_current_state.csv"
+    "data/mood_reported.csv"
     )
 
 # My first function in Python!!
@@ -103,12 +102,49 @@ df_demo_moods = (
     .group_by(["age_group", "age_group_order"])
     .agg([
     pl.len().alias("n"),
-    pl.mean("response").alias("avg_mood"),
+    (pl.mean("response")/1000).alias("avg_mood"),
     pl.mean("LevelProgressionAmount").alias("avg_prog")
     ])
     .sort("age_group_order")
 )
 
+#==========================================================================#
+#%% Plot Creation-----------------------------------------------------------
+(
+    pn.ggplot(df_demo_moods, pn.aes("age_group", 1))
+    + pn.watermark("images/house.png", xo=0, yo=0)
+    + pn.geom_col(
+        fill = "#bababa",
+        size = .2,
+        width = .31
+        )
+    + pn.geom_point(
+        mapping = pn.aes(y = 0.01),
+        fill = "#bababa",
+        size = 13,
+        stroke = 0
+        )
+    + pn.geom_col(
+        mapping = pn.aes(y = "avg_prog"),
+        fill = "#3365b5",
+        color = "#1a3f7a",
+        size = .2,
+        width = .15
+        )
+    + pn.geom_point(
+        mapping = pn.aes(y = "avg_mood"),
+        fill = "#0b7337",
+        size = 3
+        )
+    + pn.watermark("images/pws.png", xo=0, yo=300)
+    + pn.coord_cartesian(
+        ylim = (0,2.5)
+    )
+    + pn.theme_void() 
+    + pn.theme(
+        figure_size=(80, 90),
+)
+)
 
 
 
