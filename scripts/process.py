@@ -166,7 +166,7 @@ fm._load_fontmanager(try_read_cache=False)
 #%% Plot Creation-----------------------------------------------------------
 background_color = "#033c70"
 dodge_text = pn.position_dodge(width = 1.2)
-description_text = "This visual shows average Power Wash Simulator player experiences by age group. Blue percentages represent average level progression,\nand green percentages represent self-reported well-being (N = 19,837). Research conducted by Tilburg University's School of Social and\nBehavioral Sciences using a research edition of Power Wash Simulator, a calming first-person powerwashing game."
+description_text = "This visual shows average Power Wash Simulator player experiences by age group. Blue percentages represent average level progression,\nand green percentages represent self-reported well-being (N = 19,376). Research conducted by Tilburg University's School of Social and\nBehavioral Sciences using a research edition of Power Wash Simulator, a calming first-person powerwashing game."
 pn.options.figure_size = (12, 8)
 
 plt_top = (
